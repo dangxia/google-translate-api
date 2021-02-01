@@ -72,12 +72,6 @@ func Analyze(input string) ([]string, error) {
 	}
 
 	step++
-	tmp, err = getByIndex(tmp, 0, step)
-	if err != nil {
-		return nil, err
-	}
-
-	step++
 	list, ok := tmp.([]interface{})
 	if !ok {
 		return nil, fmt.Errorf("step%d type is incorrect", step)
@@ -88,22 +82,18 @@ func Analyze(input string) ([]string, error) {
 	}
 
 	result := make([]string, 0)
-	first, ok := list[0].(string)
-
-	if !ok {
-		return nil, fmt.Errorf("first translation is not string")
-	}
-	result = append(result, first)
-
-	if len(list) > 1 {
-		optionals, ok := list[1].([]interface{})
-		if ok {
-			for _, v := range optionals {
-				if item, ok := v.(string); ok {
-					result = append(result, item)
-				}
-			}
+	for _, sentences := range list {
+		_sentences, ok := sentences.([]interface{})
+		if !ok {
+			return nil, fmt.Errorf("step%d type is incorrect", step)
 		}
+
+		first, ok := _sentences[0].(string)
+
+		if !ok {
+			return nil, fmt.Errorf("first translation is not string")
+		}
+		result = append(result, first)
 	}
 	return result, nil
 }

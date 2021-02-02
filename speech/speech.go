@@ -19,6 +19,8 @@ type Speech interface {
 	Request() ([]string, error)
 
 	Save(path string) error
+
+	RequestBytes() ([]byte, error)
 }
 
 func NewSpeech(ctx ctx.Context, text, lang string, slowly bool) Speech {
@@ -48,11 +50,10 @@ type speech struct {
 	requestOnce sync.Once
 }
 
-func (me *speech) Save(path string) error {
-
+func (me *speech) RequestBytes() ([]byte, error) {
 	payloads, err := me.Request()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	bb := make([]byte, 0)
@@ -60,11 +61,18 @@ func (me *speech) Save(path string) error {
 	for _, pl := range payloads {
 		plBB, err := base64.StdEncoding.DecodeString(pl)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		bb = append(bb, plBB...)
 	}
+	return bb, nil
+}
 
+func (me *speech) Save(path string) error {
+	bb, err := me.RequestBytes()
+	if err != nil {
+		return err
+	}
 	return ioutil.WriteFile(path, bb, 0644)
 }
 

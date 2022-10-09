@@ -7,7 +7,7 @@ import (
 )
 
 func TestAnalyzeResult(t *testing.T) {
-	ctx, _ := ctx.NewContext()
+	ctx, _ := ctx.NewContextWithOption("com.hk", "http://127.0.0.1:4780")
 	api := NewTranslateApi(ctx)
 
 	translator, err := api.CreateTranslator("hello")
@@ -20,6 +20,9 @@ func TestAnalyzeResult(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s, _ := translation.Get()
+	s, err := translation.Get()
+	if err != nil {
+		t.Fatal(err)
+	}
 	println(strings.Join(s, ","))
 }

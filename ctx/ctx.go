@@ -1,10 +1,12 @@
 package ctx
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/dangxia/google-translate-api/tokenizer"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -91,6 +93,10 @@ func createDefaultPreProcessors() ([]tokenizer.PreProcessor, error) {
 }
 
 func NewContext() (Context, error) {
+	return NewContextWithOption("com.hk", "")
+}
+
+func NewContextWithOption(tld string, proxy string) (Context, error) {
 	defaultPreProcessors, err := createDefaultPreProcessors()
 	if err != nil {
 		return nil, err
@@ -102,13 +108,28 @@ func NewContext() (Context, error) {
 		}).DialContext,
 		TLSHandshakeTimeout: 5 * time.Second,
 	}
+
+	if len(proxy) > 0 {
+		proxy2, err := url.Parse(proxy)
+		if err != nil {
+			return nil, err
+		}
+		netTransport = &http.Transport{
+			DialContext: (&net.Dialer{
+				Timeout: 5 * time.Second,
+			}).DialContext,
+			TLSHandshakeTimeout: 5 * time.Second,
+			Proxy:               http.ProxyURL(proxy2),
+			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+		}
+	}
 	netClient := &http.Client{
 		Timeout:   time.Second * 10,
 		Transport: netTransport,
 	}
 
 	ctx := &context{
-		tld: "cn",
+		tld: tld,
 
 		checkLang: true,
 
